@@ -1,190 +1,138 @@
-// ─────────────────────────────────────────
-// AUTH STATE LISTENER
-// ─────────────────────────────────────────
+// Initialize auth & db from firebase-config.js
+// Make sure firebase-config.js is loaded before this script
+
+// Listen to auth state changes and redirect accordingly
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        const userDoc = await db.collection('users')
-                                .doc(user.uid)
-                                .get();
-        const userData = userDoc.data();
-        const currentPage = window.location.pathname;
+        try {
+            const userDoc = await db.collection("users").doc(user.uid).get();
+            const userData = userDoc.data();
 
-        // If on login page and already logged in → redirect
-        if (currentPage.includes('login.html')) {
-            if (userData?.role === 'admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'dashboard.html';
-            }
-        }
+            const currentPath = window.location.pathname;
 
-        // If on dashboard → set username
-        if (currentPage.includes('dashboard.html')) {
-            const nameEl = document.getElementById('userName');
-            if (nameEl) {
-                nameEl.textContent = userData?.displayName || user.email;
-            }
-            loadUserData();
-        }
-
-        // If on admin page → verify role
-        if (currentPage.includes('admin.html')) {
-            if (userData?.role !== 'admin') {
-                // Not an admin → kick out
-                window.location.href = 'dashboard.html';
-            } else {
-                const nameEl = document.getElementById('adminName');
-                if (nameEl) {
-                    nameEl.textContent = userData?.displayName || user.email;
+            if (currentPath.includes("login.html") || currentPath === "/" || currentPath.endsWith(".html") === false) {
+                // Redirect to admin or user dashboard depending on role
+                if (userData?.role === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "dashboard.html";
                 }
             }
-        }
 
+            // If on dashboard
+            if (currentPath.includes("dashboard.html")) {
+                const userNameElem = document.getElementById("userName");
+                if (userNameElem) userNameElem.textContent = userData?.displayName || user.email;
+            }
+
+            // If on admin page
+            if (currentPath.includes("admin.html")) {
+                if (userData?.role !== "admin") {
+                    // Not allowed to access admin page
+                    alert("You do not have admin privileges.");
+                    window.location.href = "dashboard.html";
+                } else {
+                    const adminNameElem = document.getElementById("adminName");
+                    if (adminNameElem) adminNameElem.textContent = userData?.displayName || user.email;
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+            alert("An error occurred. Please try logging in again.");
+            auth.signOut();
+            window.location.href = "login.html";
+        }
     } else {
         // Not logged in
-        const currentPage = window.location.pathname;
-        if (currentPage.includes('dashboard.html') || 
-            currentPage.includes('admin.html')) {
-            window.location.href = 'login.html';
+        const currentPath = window.location.pathname;
+        if (currentPath.includes("dashboard.html") || currentPath.includes("admin.html")) {
+            window.location.href = "login.html";
         }
     }
 });
 
-// ─────────────────────────────────────────
-// LOGIN FORM HANDLER
-// ─────────────────────────────────────────
-document.getElementById('loginForm')
-    ?.addEventListener('submit', async (e) => {
+// Login form handler
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email    = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const errorBox = document.getElementById('loginError');
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
     try {
-        // Show loading state
-        const btn = e.target.querySelector('button');
-        btn.textContent = 'Logging in...';
-        btn.disabled = true;
-
         await auth.signInWithEmailAndPassword(email, password);
-        // onAuthStateChanged above will handle redirect
-
+        // Redirect handled by onAuthStateChanged listener
     } catch (error) {
-        // Show error message
-        if (errorBox) {
-            errorBox.textContent = getErrorMessage(error.code);
-            errorBox.style.display = 'block';
-        } else {
-            alert('Login Failed: ' + getErrorMessage(error.code));
-        }
-
-        const btn = e.target.querySelector('button');
-        btn.textContent = 'Login';
-        btn.disabled = false;
+        alert("Login failed: " + getFriendlyErrorMessage(error.code));
     }
 });
 
-// ─────────────────────────────────────────
-// REGISTER FORM HANDLER
-// ─────────────────────────────────────────
-document.getElementById('registerForm')
-    ?.addEventListener('submit', async (e) => {
+// Register form handler
+document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const name     = document.getElementById('displayName').value.trim();
-    const email    = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value.trim();
+    const displayName = document.getElementById("displayName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
 
     try {
-        const btn = e.target.querySelector('button');
-        btn.textContent = 'Registering...';
-        btn.disabled = true;
-
-        // Create auth user
-        const userCredential = await auth
-            .createUserWithEmailAndPassword(email, password);
-
-        // Save user data to Firestore
-        await db.collection('users')
-                .doc(userCredential.user.uid)
-                .set({
-                    displayName: name,
-                    email: email,
-                    role: 'user',   // Default role = user
-                    createdAt: firebase.firestore
-                                      .FieldValue.serverTimestamp()
-                });
-
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
-
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection("users").doc(userCredential.user.uid).set({
+            displayName,
+            email,
+            role: "user", // default role for new users
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        window.location.href = "dashboard.html";
     } catch (error) {
-        alert('Registration Failed: ' + getErrorMessage(error.code));
-        const btn = e.target.querySelector('button');
-        btn.textContent = 'Register';
-        btn.disabled = false;
+        alert("Registration failed: " + getFriendlyErrorMessage(error.code));
     }
 });
 
-// ─────────────────────────────────────────
-// LOGOUT HANDLER
-// ─────────────────────────────────────────
-document.getElementById('logoutBtn')
-    ?.addEventListener('click', async () => {
+// Logout button handler (place logout button with id="logoutBtn" where needed)
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     await auth.signOut();
-    window.location.href = 'login.html';
+    window.location.href = "login.html";
 });
 
-// ─────────────────────────────────────────
-// LOAD PUBLIC TOURNAMENTS (Landing Page)
-// ─────────────────────────────────────────
+// Friendly error messages map for Firebase auth errors
+function getFriendlyErrorMessage(code) {
+    const errors = {
+        "auth/wrong-password": "Incorrect password. Please try again.",
+        "auth/user-not-found": "No user found with this email.",
+        "auth/invalid-email": "Invalid email address.",
+        "auth/email-already-in-use": "Email is already registered.",
+        "auth/weak-password": "Password should be at least 6 characters.",
+        "auth/too-many-requests": "Too many failed attempts. Please try later.",
+    };
+    return errors[code] || "An error occurred: " + code;
+}
+
+// Example function to load public tournaments (optional)
 async function loadPublicTournaments() {
-    const div = document.getElementById('public-tournaments');
-    if (!div) return;
+    const tournamentsDiv = document.getElementById("public-tournaments");
+    if (!tournamentsDiv) return;
 
     try {
-        const snapshot = await db.collection('tournaments')
-            .where('status', '==', 'active')
-            .limit(5)
-            .get();
+        const snapshot = await db.collection("tournaments").where("status", "==", "active").limit(5).get();
 
         if (snapshot.empty) {
-            div.innerHTML = `
-                <div class="card">
-                    <p>No active tournaments yet. Check back soon!</p>
-                </div>`;
+            tournamentsDiv.innerHTML = "<p>No active tournaments at the moment.</p>";
             return;
         }
 
-        div.innerHTML = snapshot.docs.map(doc => {
-            const d = doc.data();
-            return `
+        tournamentsDiv.innerHTML = snapshot.docs
+            .map((doc) => {
+                const d = doc.data();
+                return `
                 <div class="tournament-item">
-                    <h4>${d.name}</h4>
-                    <p><strong>Date:</strong> ${d.date}</p>
-                    <p><strong>Location:</strong> ${d.location}</p>
-                    <span class="badge">Active</span>
+                   <h4>${d.name}</h4>
+                   <p><strong>Date: </strong> ${d.date}</p>
+                   <p><strong>Location: </strong> ${d.location}</p>
                 </div>`;
-        }).join('');
-
-    } catch(e) {
-        div.innerHTML = '<p>Unable to load tournaments.</p>';
-        console.error('Tournament load error:', e);
+            })
+            .join("");
+    } catch (error) {
+        tournamentsDiv.innerHTML = "<p>Unable to load tournaments.</p>";
+        console.error("Error loading tournaments:", error);
     }
-}
-
-// ─────────────────────────────────────────
-// FRIENDLY ERROR MESSAGES
-// ─────────────────────────────────────────
-function getErrorMessage(code) {
-    const errors = {
-        'auth/wrong-password'     : 'Wrong password. Please try again.',
-        'auth/user-not-found'     : 'No account found with this email.',
-        'auth/invalid-email'      : 'Invalid email format.',
-        'auth/too-many-requests'  : 'Too many attempts. Try again later.',
-        'auth/email-already-in-use': 'Email already registered.',
-        'auth/weak-password'      : 'Password must be at least 6 characters.'
-    };
-    return errors[code] || 'Something went wrong. Please try again.';
 }
