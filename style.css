@@ -1,0 +1,114 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Header */
+header {
+    background: rgba(0,0,0,0.9);
+    color: white;
+    padding: 1rem 0;
+    position: sticky; top: 0; z-index: 100;
+}
+
+header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+header nav { display: flex; gap: 1rem; justify-content: center; }
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary { background: #ff6b6b; color: white; }
+.btn-primary:hover { background: #ff5252; transform: translateY(-2px); }
+.btn-secondary { background: #4ecdc4; color: white; }
+.btn-danger { background: #ff4757; color: white; }
+
+/* Cards & Grid */
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.full-width { grid-column: 1 / -1; }
+
+/* Tournament Items */
+.tournament-item, .match-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #ff6b6b;
+}
+
+.tournament-item h4, .match-item h4 { color: #333; margin-bottom: 0.5rem; }
+
+/* Auth Pages */
+.auth-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.auth-container { width: 100%; max-width: 400px; padding: 2rem; }
+.auth-card { 
+    background: white; 
+    padding: 2rem; 
+    border-radius: 20px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.auth-card input {
+    width: 100%; padding: 1rem; margin-bottom: 1rem;
+    border: 2px solid #eee; border-radius: 10px;
+    font-size: 1rem;
+}
+
+.full-width { width: 100% !important; }
+
+/* Modal */
+.modal {
+    display: none; position: fixed; z-index: 1000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white; margin: 10% auto; padding: 2rem;
+    border-radius: 15px; width: 90%; max-width: 500px;
+    position: relative;
+}
+
+.close { 
+    position: absolute; right: 1rem; top: 1rem;
+    font-size: 2rem; cursor: pointer; color: #aaa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    header nav { flex-direction: column; align-items: center; }
+}
+
+/* Admin Badge */
+.admin-badge { background: #ffd700; color: #333; padding: 0.25rem 0.5rem; border-radius: 20px; font-size: 0.8rem; }

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Beyblade Community</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-crown"></i> Admin Panel</h1>
+            <div class="user-info">
+                <span id="adminName">Loading...</span>
+                <button id="logoutBtn" class="btn btn-danger">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="admin-actions">
+            <button id="addTournamentBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Tournament
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Tournaments</h3>
+                <div id="admin-tournaments"></div>
+            </div>
+            <div class="card">
+                <h3>Matches</h3>
+                <div id="admin-matches"></div>
+            </div>
+        </div>
+
+        <!-- Add Tournament Modal -->
+        <div id="tournamentModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Add Tournament</h3>
+                <form id="tournamentForm">
+                    <input type="text" id="tournamentName" placeholder="Tournament Name" required>
+                    <input type="date" id="tournamentDate" required>
+                    <input type="text" id="tournamentLocation" placeholder="Location">
+                    <button type="submit" class="btn btn-primary">Create Tournament</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script src="admin-script.js"></script>
+</body>
+</html>
